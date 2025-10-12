@@ -12,8 +12,6 @@ const PORT = process.env.PORT || 5000;
 const CTA_TRAIN_KEY = process.env.CTA_TRAIN_KEY;
 const CTA_BUS_KEY = process.env.CTA_BUS_KEY;
 
-//console.log("Train Key:", CTA_TRAIN_KEY);
-//console.log("Bus Key:", CTA_BUS_KEY);
 
 // Helper function to fetch CTA data
 async function fetchCTAData(url, res, type) {

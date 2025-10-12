@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+
+# IDE & system files
+.idea/
+.vscode/
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+*.swp
+
+# Optional lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

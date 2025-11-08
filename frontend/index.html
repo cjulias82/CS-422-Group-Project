@@ -1,10 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Looped Transit Map</title>
+    <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+<header>
+    <h1>LOOPED</h1>
+    <nav>
+        <span>A WEB APPLICATION</span>
+        <span>MADE FOR COMMUTERS</span>
+        <span>BY COMMUTERS</span>
+    </nav>
+</header>
 
+<main>
+    <section class="info">
+        <h2>See local transit options for you.</h2>
+
+        <!-- Search Box -->
+        <div class="search-box">
+            <input id="destination" type="text" placeholder="Your destination"/>
+            <button id="openPanel" class="search-btn">🔍</button>
+        </div>
+    </section>
+
+    <!-- Side Panel -->
+    <div id="sidePanel" class="side-panel">
+        <button id="closePanel" class="close-btn">✕</button>
+
+        <div class="panel-content">
+            <h3>Plan Your Trip</h3>
+
+            <label for="panelFrom">From:</label>
+            <input id="panelFrom" type="text" placeholder="Your Location"/>
+
+            <label for="panelDestination">To:</label>
+            <!-- Added an ID here so script.js can find it -->
+            <input id="panelDestination" type="text" placeholder="Destination"/>
+
+            <label for="panelLeave">Leave:</label>
+            <select id="panelLeave">
+                <option>Now</option>
+                <option>In 15 minutes</option>
+                <option>In 30 minutes</option>
+                <option>Tomorrow</option>
+            </select>
+
+            <button class="plan-btn">Search</button>
+        </div>
+    </div>
+
+    <section class="map-container">
+        <div id="map"></div>
+    </section>
+</main>
+
+<footer>
+    <div>Favorites</div>
+    <div>Track</div>
+    <div>Preferences</div>
+    <div>Contact</div>
+</footer>
+
+<!-- Load script.js (handles map + panel logic) -->
+<script src="script.js"></script>
 </body>
 </html>

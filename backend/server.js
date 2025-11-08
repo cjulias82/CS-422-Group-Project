@@ -5,15 +5,25 @@ import express from "express";
 import axios from "axios";
 import cors from "cors";
 
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Initialize Express app first
 const app = express();
 app.use(cors());
+
+// Serve frontend files
+app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 5000;
 const CTA_TRAIN_KEY = process.env.CTA_TRAIN_KEY;
 const CTA_BUS_KEY = process.env.CTA_BUS_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-
-// Helper function to fetch CTA data
+// ---------- Helper ----------
 async function fetchCTAData(url, res, type) {
     try {
         const response = await axios.get(url);
@@ -25,26 +35,25 @@ async function fetchCTAData(url, res, type) {
 }
 
 
+// ---------- Routes ----------
 app.get("/", (req, res) => res.send("CTA Ventra API is running..."));
 
-// Train data by route (e.g., Red, Blue, etc.)
+//Train data
 app.get("/api/trains/:route", (req, res) => {
     const route = req.params.route;
     const url = `https://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=${CTA_TRAIN_KEY}&rt=${route}&outputType=JSON`;
     fetchCTAData(url, res, "train");
 });
 
-// Bus data by route
+// Bus data
 app.get("/api/buses/:route", async (req, res) => {
     const route = req.params.route;
     if (!route) return res.status(400).json({ error: "Bus route is required" });
 
     try {
-        // 1️⃣ Get vehicles on this route
         const vehiclesUrl = `https://www.ctabustracker.com/bustime/api/v3/getvehicles?key=${CTA_BUS_KEY}&rt=${route}&format=json`;
         const vehiclesRes = await axios.get(vehiclesUrl);
         const vehicles = vehiclesRes.data["bustime-response"].vehicle || [];
-
 
         res.json({ route, vehicles });
     } catch (err) {
@@ -53,14 +62,11 @@ app.get("/api/buses/:route", async (req, res) => {
     }
 });
 
-// Get detailed CTA service alerts
+// CTA service alerts
 app.get("/api/alerts", async (req, res) => {
     const { routeid, activeonly, planned, accessibility } = req.query;
 
-    // Base URL for CTA Detailed Alerts API
     let url = `https://www.transitchicago.com/api/1.0/alerts.aspx?outputType=JSON`;
-
-    // Add optional query params
     if (routeid) url += `&routeid=${encodeURIComponent(routeid)}`;
     if (activeonly) url += `&activeonly=${activeonly}`;
     if (planned) url += `&planned=${planned}`;
@@ -69,14 +75,9 @@ app.get("/api/alerts", async (req, res) => {
     try {
         const response = await axios.get(url);
         const data = response.data?.CTAAlerts;
+        if (!data) return res.status(500).json({ error: "Unexpected CTA API response" });
 
-        if (!data) {
-            return res.status(500).json({ error: "Unexpected CTA API response" });
-        }
-
-        // Normalize to a clean, frontend-friendly format
         const alerts = Array.isArray(data.Alert) ? data.Alert : [data.Alert];
-
         const formattedAlerts = alerts.map(alert => ({
             id: alert.AlertId,
             headline: alert.Headline,
@@ -120,5 +121,39 @@ app.get("/api/alerts", async (req, res) => {
 });
 
 
+// ---------- Google Maps API Integration ----------
 
+// (1) Serve the Google Maps key (only for development use)
+app.get("/api/google-key", (req, res) => {
+    // Optional: Restrict this so you don’t leak your key in production
+    if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "Google Maps key not available in production" });
+    }
+    res.json({ key: GOOGLE_MAPS_API_KEY });
+});
+
+// (2) Proxy to Google Places API for nearby bus/train stops
+app.get("/api/nearby", async (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
+
+    try {
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
+        const response = await axios.get(url, {
+            params: {
+                location: `${lat},${lng}`,
+                radius: 600, // meters
+                keyword: "Bus",
+                key: GOOGLE_MAPS_API_KEY,
+            },
+        });
+        res.json(response.data);
+    } catch (error) {
+        console.error("Error fetching nearby places:", error.message);
+        res.status(500).json({ error: "Failed to fetch nearby locations" });
+    }
+});
+
+
+// ---------- Start Server ----------
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

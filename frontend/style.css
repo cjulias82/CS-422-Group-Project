@@ -34,13 +34,25 @@ main {
     width: 40%;
 }
 
+/* Move only the map block left; does not affect siblings */
 .map-container {
+    /* adjust this value to taste */
+    transform: translateX(-250px);
     width: 50%;
     height: 500px;
 }
 
+/* Keep it normal on smaller screens */
+@media (max-width: 900px) {
+    .map-container {
+        transform: none;
+    }
+}
+
+/* (optional) make sure the map has explicit size */
 #map {
     width: 100%;
+    max-width: 900px;
     height: 100%;
     border-radius: 10px;
 }
@@ -135,4 +147,61 @@ footer {
 
 .plan-btn:hover {
     background: #22328f;
+}
+
+.routes-container {
+    margin-top: 1em;
+    border-top: 1px solid #ddd;
+    padding-top: 1em;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.route-item {
+    background: #f9f9f9;
+    padding: 0.75em;
+    border-radius: 10px;
+    margin-bottom: 0.75em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.route-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.route-chip {
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.route-chip.train {
+    background-color: #1565c0;
+}
+
+.route-chip.bus {
+    background-color: #555;
+}
+
+.route-item.active {
+    border-left: 4px solid #3f51b5;
+    background-color: #eef2ff;
+}
+
+.route-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+}
+
+.route-step img.route-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
 }

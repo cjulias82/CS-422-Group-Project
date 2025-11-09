@@ -154,6 +154,91 @@ app.get("/api/nearby", async (req, res) => {
     }
 });
 
+// ---------- Nearby stops ----------
+app.get("/api/nearby", async (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
+
+    try {
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
+        const response = await axios.get(url, {
+            params: {
+                location: `${lat},${lng}`,
+                radius: 1000,
+                keyword: "transit_station",
+                key: GOOGLE_MAPS_API_KEY,
+            },
+        });
+        // Simplify results
+        const results = response.data.results.map((place) => ({
+            name: place.name,
+            location: place.geometry.location,
+            types: place.types,
+            address: place.vicinity,
+        }));
+
+        res.json({ count: results.length, results });
+    } catch (error) {
+        console.error("Error fetching nearby routes:", error.message);
+        res.status(500).json({ error: "Failed to fetch nearby routes" });
+    }
+});
+
+// ---------- Transit Routes (Bus + Train Options) ----------
+app.get("/api/routes", async (req, res) => {
+    const { from, to } = req.query;
+    if (!from || !to) {
+        return res.status(400).json({ error: "Missing 'from' or 'to' parameter" });
+    }
+
+    try {
+        const url = `https://maps.googleapis.com/maps/api/directions/json`;
+        const response = await axios.get(url, {
+            params: {
+                origin: from,
+                destination: to,
+                mode: "transit",
+                alternatives: true, // <-- important: include multiple routes
+                key: GOOGLE_MAPS_API_KEY,
+            },
+        });
+
+        const routes = response.data.routes.map((route) => {
+            const leg = route.legs[0];
+            const steps = leg.steps
+                .filter((s) => s.travel_mode === "TRANSIT")
+                .map((s) => {
+                    const vehicleType = s.transit_details.line.vehicle.type.toUpperCase();
+                    const isTrain = ["SUBWAY", "HEAVY_RAIL", "TRAM", "RAIL"].includes(vehicleType);
+
+                    return {
+                        type: isTrain ? "train" : "bus",
+                        routeName: s.transit_details.line.short_name || s.transit_details.line.name,
+                        departureStop: s.transit_details.departure_stop.name,
+                        arrivalStop: s.transit_details.arrival_stop.name,
+                        numStops: s.transit_details.num_stops,
+                        departureTime: s.transit_details.departure_time?.text,
+                        arrivalTime: s.transit_details.arrival_time?.text,
+                        headsign: s.transit_details.headsign,
+                        color: s.transit_details.line.color || (isTrain ? "#1565C0" : "#555"),
+                    };
+                });
+
+            return {
+                summary: route.summary || "Transit Route",
+                duration: leg.duration.text,
+                startAddress: leg.start_address,
+                endAddress: leg.end_address,
+                steps,
+            };
+        });
+
+        res.json({ routes });
+    } catch (error) {
+        console.error("Error fetching transit routes:", error.message);
+        res.status(500).json({ error: "Failed to fetch transit routes" });
+    }
+});
 
 // ---------- Start Server ----------
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

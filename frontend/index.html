@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Looped Transit Map</title>
-    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
@@ -19,37 +19,37 @@
 <main>
     <section class="info">
         <h2>See local transit options for you.</h2>
-
-        <!-- Search Box -->
         <div class="search-box">
-            <input id="destination" type="text" placeholder="Your destination"/>
+            <input id="destination" type="text" placeholder="Your destination" />
             <button id="openPanel" class="search-btn">🔍</button>
         </div>
     </section>
 
-    <!-- Side Panel -->
     <div id="sidePanel" class="side-panel">
         <button id="closePanel" class="close-btn">✕</button>
-
         <div class="panel-content">
             <h3>Plan Your Trip</h3>
 
-            <label for="panelFrom">From:</label>
-            <input id="panelFrom" type="text" placeholder="Your Location"/>
+            <label>From:</label>
+            <input id="fromInput" type="text" placeholder="Your Location" />
 
-            <label for="panelDestination">To:</label>
-            <!-- Added an ID here so script.js can find it -->
-            <input id="panelDestination" type="text" placeholder="Destination"/>
+            <label>To:</label>
+            <input id="toInput" type="text" placeholder="Destination" />
 
-            <label for="panelLeave">Leave:</label>
-            <select id="panelLeave">
+            <label>Leave:</label>
+            <select id="leaveTime">
                 <option>Now</option>
                 <option>In 15 minutes</option>
                 <option>In 30 minutes</option>
                 <option>Tomorrow</option>
             </select>
 
-            <button class="plan-btn">Search</button>
+            <button id="planBtn" class="plan-btn">Search</button>
+
+            <div class="routes-container">
+                <h4>Available Routes</h4>
+                <ul id="routeList"></ul>
+            </div>
         </div>
     </div>
 
@@ -65,7 +65,6 @@
     <div>Contact</div>
 </footer>
 
-<!-- Load script.js (handles map + panel logic) -->
 <script src="script.js"></script>
 </body>
 </html>

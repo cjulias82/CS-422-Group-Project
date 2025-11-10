@@ -17,6 +17,7 @@
 </header>
 
 <main>
+    <!-- Search Section -->
     <section class="info">
         <h2>See local transit options for you.</h2>
         <div class="search-box">
@@ -25,6 +26,7 @@
         </div>
     </section>
 
+    <!-- Plan Trip Panel -->
     <div id="sidePanel" class="side-panel">
         <button id="closePanel" class="close-btn">✕</button>
         <div class="panel-content">
@@ -53,13 +55,71 @@
         </div>
     </div>
 
+    <!-- Save Route Panel -->
+    <div id="saveRoutePanel" class="side-panel">
+        <button id="closeSavePanel" class="close-btn">✕</button>
+        <div class="panel-content">
+            <h3>Save your route:</h3>
+            <p id="routeSummaryText"></p>
+
+            <label for="routeName">Route name:</label>
+            <input id="routeName" type="text" placeholder="Custom Route 1" />
+
+            <label for="arrivalTime">Arrival Time:</label>
+            <input id="arrivalTime" type="time" />
+
+            <button id="saveRouteBtn" class="plan-btn">Save</button>
+        </div>
+    </div>
+
+    <!-- Create Custom Route Panel -->
+    <div id="createRoutePanel" class="side-panel">
+        <button id="closeCreatePanel" class="close-btn">✕</button>
+        <div class="panel-content">
+            <h3>Create a new route:</h3>
+
+            <label>Route Name:</label>
+            <input id="newRouteName" type="text" placeholder="New Route" />
+
+            <label>Starting Point:</label>
+            <div class="search-box">
+                <input id="newRouteStart" type="text" placeholder="Your Starting Point" />
+                <button class="search-btn">🔍</button>
+            </div>
+
+            <label>Arrival Time:</label>
+            <input id="newRouteTime" type="time" />
+
+            <label>Destination:</label>
+            <div class="search-box">
+                <input id="newRouteDest" type="text" placeholder="Your destination" />
+                <button class="search-btn">🔍</button>
+            </div>
+
+            <button id="createRouteSaveBtn" class="plan-btn">Save Route</button>
+        </div>
+    </div>
+
+    <!-- Map -->
     <section class="map-container">
         <div id="map"></div>
     </section>
+
+    <!-- Route Details Panel -->
+    <div id="routeDetailsPanel" class="side-panel">
+        <button id="closeRouteDetails" class="close-btn">✕</button>
+        <div id="routeDetailsContent" class="panel-content"></div>
+    </div>
 </main>
 
 <footer>
-    <div>Favorites</div>
+    <div class="favorites-dropdown">
+        <label><strong>Favorites</strong></label>
+        <div class="custom-dropdown">
+            <button id="favoritesToggle" class="dropdown-toggle">Select a route ▾</button>
+            <div id="favoritesMenu" class="dropdown-menu"></div>
+        </div>
+    </div>
     <div>Track</div>
     <div>Preferences</div>
     <div>Contact</div>

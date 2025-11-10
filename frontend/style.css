@@ -36,7 +36,6 @@ main {
 
 /* Move only the map block left; does not affect siblings */
 .map-container {
-    /* adjust this value to taste */
     transform: translateX(-250px);
     width: 50%;
     height: 500px;
@@ -90,7 +89,24 @@ footer {
     color: white;
     border: none;
     cursor: pointer;
-    padding: 0.7rem 1rem;
+    width: 45px;
+    height: 45px;
+    border-radius: 0 25px 25px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: background 0.3s;
+}
+
+.search-btn:hover {
+    background: #22328f;
+}
+
+.search-btn img {
+    width: 22px;
+    height: 22px;
+    filter: invert(1); /* makes it white */
 }
 
 /* --- Side Panel --- */
@@ -181,7 +197,7 @@ footer {
 }
 
 .route-chip.train {
-    background-color: #1565c0;
+    color: #555;
 }
 
 .route-chip.bus {
@@ -204,4 +220,326 @@ footer {
     width: 22px;
     height: 22px;
     object-fit: contain;
+}
+
+#saveRoutePanel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 350px;
+    height: 100%;
+    background: white;
+    box-shadow: -3px 0 8px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    padding: 20px;
+}
+
+#saveRoutePanel.active {
+    transform: translateX(0);
+}
+
+#saveRoutePanel .panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#favoritesSelect {
+    margin-top: 6px;
+    padding: 4px;
+    min-width: 180px;
+}
+
+#createRoutePanel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 380px;
+    height: 100%;
+    background: white;
+    box-shadow: -3px 0 8px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    padding: 20px;
+}
+
+#createRoutePanel.active {
+    transform: translateX(0);
+}
+
+#createRoutePanel .panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#createRoutePanel h3 {
+    color: #3b4cc0;
+}
+
+.search-box input {
+    width: calc(100% - 40px);
+}
+
+.search-box button {
+    width: 36px;
+    margin-left: 4px;
+}
+
+#favoritesSelect option[value="new"] {
+    font-weight: bold;
+}
+
+.route-item {
+    position: relative;
+    padding: 0.5rem 2.5rem 0.5rem 0.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.fav-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.2s ease;
+}
+
+.fav-btn:hover {
+    transform: scale(1.1);
+}
+
+.fav-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* --- Route Details Panel --- */
+#routeDetailsPanel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 35%;
+    height: 100%;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    padding: 2rem;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    z-index: 2000;
+}
+
+#routeDetailsPanel.active {
+    transform: translateX(0);
+}
+
+#routeDetailsPanel h2 {
+    color: #3547a1;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.route-steps {
+    margin-top: 1.5rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0.75rem 0;
+}
+
+.step-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.directions-list {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.directions-dropdown {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f7f8ff;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.directions-dropdown h4 {
+    margin: 0 0 8px 0;
+    color: #2f3e9e;
+}
+
+.direction-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 6px 0;
+}
+
+.direction-step .route-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+
+.direction-step strong {
+    color: #2f3e9e;
+    font-size: 0.9rem;
+}
+
+.cta-line-chip {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.delete-fav {
+    background: none;
+    border: none;
+    color: #000;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.delete-fav:hover {
+    color: #333;
+    transform: scale(1.2);
+}
+
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+    width: 220px;
+    font-family: Arial, sans-serif;
+}
+
+.dropdown-toggle {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-toggle:hover {
+    background: #f8f8f8;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+    z-index: 10;
+}
+
+.dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #f0f0f0;
+}
+
+.dropdown-actions span {
+    font-weight: bold;
+    cursor: pointer;
+    color: #777;
+    font-size: 16px;
+}
+
+.dropdown-actions span:hover {
+    color: #000;
+}
+
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+    width: 220px;
+    font-family: Arial, sans-serif;
+}
+
+.dropdown-toggle {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-toggle:hover {
+    background: #f8f8f8;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+    z-index: 10;
+}
+
+.dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #f0f0f0;
+}
+
+.dropdown-actions span {
+    font-weight: bold;
+    cursor: pointer;
+    color: #777;
+    font-size: 16px;
+}
+
+.dropdown-actions span:hover {
+    color: #000;
 }

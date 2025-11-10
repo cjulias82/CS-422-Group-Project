@@ -205,24 +205,39 @@ app.get("/api/routes", async (req, res) => {
 
         const routes = response.data.routes.map((route) => {
             const leg = route.legs[0];
-            const steps = leg.steps
-                .filter((s) => s.travel_mode === "TRANSIT")
-                .map((s) => {
-                    const vehicleType = s.transit_details.line.vehicle.type.toUpperCase();
+            const steps = leg.steps.map((s) => {
+                const mode = s.travel_mode.toUpperCase();
+
+                if (mode === "WALKING") {
+                    return {
+                        type: "walk",
+                        instructions: s.html_instructions?.replace(/<[^>]+>/g, "") || "Walk",
+                        distance: s.distance?.text || "",
+                        duration: s.duration?.text || "",
+                    };
+                }
+
+                if (mode === "TRANSIT") {
+                    const t = s.transit_details;
+                    const vehicleType = t.line.vehicle.type.toUpperCase();
                     const isTrain = ["SUBWAY", "HEAVY_RAIL", "TRAM", "RAIL"].includes(vehicleType);
 
                     return {
                         type: isTrain ? "train" : "bus",
-                        routeName: s.transit_details.line.short_name || s.transit_details.line.name,
-                        departureStop: s.transit_details.departure_stop.name,
-                        arrivalStop: s.transit_details.arrival_stop.name,
-                        numStops: s.transit_details.num_stops,
-                        departureTime: s.transit_details.departure_time?.text,
-                        arrivalTime: s.transit_details.arrival_time?.text,
-                        headsign: s.transit_details.headsign,
-                        color: s.transit_details.line.color || (isTrain ? "#1565C0" : "#555"),
+                        routeName: t.line.short_name || t.line.name,
+                        departureStop: t.departure_stop.name,
+                        arrivalStop: t.arrival_stop.name,
+                        numStops: t.num_stops,
+                        departureTime: t.departure_time?.text,
+                        arrivalTime: t.arrival_time?.text,
+                        headsign: t.headsign,
+                        color: t.line.color || (isTrain ? "#1565C0" : "#555"),
+                        agency: t.line.agencies?.[0]?.name || "CTA",
                     };
-                });
+                }
+
+                return null;
+            }).filter(Boolean);
 
             return {
                 summary: route.summary || "Transit Route",

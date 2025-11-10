@@ -36,8 +36,7 @@ main {
 
 /* Move only the map block left; does not affect siblings */
 .map-container {
-    transform: translateX(-250px);
-    width: 50%;
+    width: 70%;
     height: 500px;
 }
 

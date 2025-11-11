@@ -36,8 +36,8 @@ main {
 
 /* Move only the map block left; does not affect siblings */
 .map-container {
-    transform: translateX(-250px);
-    width: 50%;
+    /*transform: translateX(-250px);*/
+    width: 70%;
     height: 500px;
 }
 
@@ -542,4 +542,11 @@ footer {
 
 .dropdown-actions span:hover {
     color: #000;
+}
+
+.inline-alert-icon {
+    width: 18px;
+    height: 18px;
+    margin-left: 6px;
+    vertical-align: middle;
 }

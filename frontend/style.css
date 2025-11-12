@@ -36,10 +36,6 @@ main {
 
 /* Move only the map block left; does not affect siblings */
 .map-container {
-<<<<<<< HEAD
-=======
-    /*transform: translateX(-250px);*/
->>>>>>> 1292cae9d476f35bd1aa29584150797b8372ca1c
     width: 70%;
     height: 500px;
 }
@@ -545,14 +541,4 @@ footer {
 
 .dropdown-actions span:hover {
     color: #000;
-<<<<<<< HEAD
-=======
-}
-
-.inline-alert-icon {
-    width: 18px;
-    height: 18px;
-    margin-left: 6px;
-    vertical-align: middle;
->>>>>>> 1292cae9d476f35bd1aa29584150797b8372ca1c
 }

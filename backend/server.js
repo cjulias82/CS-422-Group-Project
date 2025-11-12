@@ -46,8 +46,8 @@ app.get("/", (req, res) => res.send("CTA Ventra API is running..."));
 
 // Route to fetch Google Maps API key (for development purposes)
 app.get("/api/google-key", (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-        return res.status(403).json({ error: "Google Maps key not available in production" });
+    if (!GOOGLE_MAPS_API_KEY) {
+        return res.status(500).json({ error: "Google Maps API key not configured" });
     }
     res.json({ key: GOOGLE_MAPS_API_KEY });
 });
@@ -325,7 +325,7 @@ app.get("/api/routes", async (req, res) => {
                     };
                 }
 
-                // 🟡 Default fallback
+                // Default fallback
                 return {
                     type: "other",
                     instructions: s.html_instructions || "Continue",

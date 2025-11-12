@@ -173,7 +173,7 @@ app.get("/api/tracknearby", async (req, res) => {
     if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
 
     try {
-        // 1️⃣ Fetch nearby stations from Google Places
+        // Fetch nearby stations from Google Places
         const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
         const placesRes = await axios.get(placesUrl, {
             params: {
@@ -192,7 +192,7 @@ app.get("/api/tracknearby", async (req, res) => {
             source: "Google Places",
         }));
 
-        // 2️⃣ Fetch live bus data from CTA API
+        // Fetch live bus data from CTA API
         const busUrl = `https://www.ctabustracker.com/bustime/api/v3/getvehicles?key=${CTA_BUS_KEY}&format=json`;
         const busRes = await axios.get(busUrl);
         const buses = (busRes.data["bustime-response"]?.vehicle || []).map((v) => ({
@@ -206,7 +206,7 @@ app.get("/api/tracknearby", async (req, res) => {
             source: "CTA Bus",
         }));
 
-        // 3️⃣ Fetch live train data from CTA API
+        // Fetch live train data from CTA API
         const trainUrl = `https://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=${CTA_TRAIN_KEY}&outputType=JSON`;
         const trainRes = await axios.get(trainUrl);
         const trainsData = trainRes.data?.ctatt?.route || [];
@@ -223,7 +223,7 @@ app.get("/api/tracknearby", async (req, res) => {
             }))
         );
 
-        // 4️⃣ Combine all results and filter nearby (within ~1km)
+        // Combine all results and filter nearby (within ~1km)
         function distance(lat1, lon1, lat2, lon2) {
             const R = 6371; // km
             const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -259,6 +259,96 @@ app.get("/api/tracknearby", async (req, res) => {
     } catch (error) {
         console.error("Error fetching nearby data:", error.message);
         res.status(500).json({ error: "Failed to fetch nearby transit data" });
+    }
+});
+
+// ---------- Transit Directions (Google Directions API) ----------
+app.get("/api/routes", async (req, res) => {
+    const { from, to } = req.query;
+    if (!from || !to)
+        return res.status(400).json({ error: "Missing origin or destination" });
+
+    try {
+        const url = `https://maps.googleapis.com/maps/api/directions/json`;
+        const response = await axios.get(url, {
+            params: {
+                origin: from,
+                destination: to,
+                mode: "transit",
+                alternatives: true,
+                key: GOOGLE_MAPS_API_KEY,
+            },
+        });
+
+        const data = response.data;
+        if (data.status !== "OK") {
+            console.error("Google Directions API error:", data.status, data.error_message);
+            return res.status(500).json({ error: data.error_message || data.status });
+        }
+
+        const routes = data.routes.map((r) => {
+            const leg = r.legs[0];
+
+            const steps = leg.steps.map((s) => {
+                const mode = s.travel_mode.toUpperCase();
+
+                // 🟢 Handle walking
+                if (mode === "WALKING") {
+                    return {
+                        type: "walking",
+                        instructions: s.html_instructions || "Walk",
+                        distance: s.distance?.text || "",
+                        duration: s.duration?.text || "",
+                    };
+                }
+
+                // 🟢 Handle transit (bus/train/subway)
+                if (mode === "TRANSIT") {
+                    const t = s.transit_details;
+                    const vehicleType = t.line.vehicle.type.toUpperCase();
+                    const isTrain = ["SUBWAY", "HEAVY_RAIL", "TRAM", "RAIL"].includes(vehicleType);
+
+                    return {
+                        type: isTrain ? "train" : "bus",
+                        routeName: t.line.short_name || t.line.name || "",
+                        headsign: t.headsign || "",
+                        departureStop: t.departure_stop.name,
+                        arrivalStop: t.arrival_stop.name,
+                        numStops: t.num_stops || 0,
+                        departureTime: t.departure_time?.text || "",
+                        arrivalTime: t.arrival_time?.text || "",
+                        distance: s.distance?.text || "",
+                        duration: s.duration?.text || "",
+                        instructions: s.html_instructions || "",
+                        color: t.line.color || (isTrain ? "#1565C0" : "#555"),
+                        agency: t.line.agencies?.[0]?.name || "CTA",
+                    };
+                }
+
+                // 🟡 Default fallback
+                return {
+                    type: "other",
+                    instructions: s.html_instructions || "Continue",
+                    distance: s.distance?.text || "",
+                    duration: s.duration?.text || "",
+                };
+            });
+
+            return {
+                duration: leg.duration.text,
+                distance: leg.distance.text,
+                arrival: leg.arrival_time?.text || "",
+                departure: leg.departure_time?.text || "",
+                startAddress: leg.start_address,
+                endAddress: leg.end_address,
+                steps,
+            };
+        });
+
+        res.json({ routes });
+    } catch (err) {
+        console.error("Error fetching routes:", err.message);
+        res.status(500).json({ error: "Failed to fetch transit routes" });
     }
 });
 

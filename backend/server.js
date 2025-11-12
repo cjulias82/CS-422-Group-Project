@@ -13,22 +13,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express app
 const app = express();
-const allowedOrigins = [
-    "https://cs-422-group-project.onrender.com",  // your frontend Render app
-    "http://localhost:5000"                       // for local testing
-];
-
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-    })
-);
+app.use(cors()); // Allow cross-origin requests
 
 // Serve frontend files (track.html, track.css, track.js)
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -61,8 +46,8 @@ app.get("/", (req, res) => res.send("CTA Ventra API is running..."));
 
 // Route to fetch Google Maps API key (for development purposes)
 app.get("/api/google-key", (req, res) => {
-    if (!GOOGLE_MAPS_API_KEY) {
-        return res.status(500).json({ error: "Google Maps API key not configured" });
+    if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "Google Maps key not available in production" });
     }
     res.json({ key: GOOGLE_MAPS_API_KEY });
 });
@@ -284,50 +269,6 @@ app.get('/', (req, res) => {
 
 app.get('/track', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'track.html'));
-});
-
-// ---------- Transit Route Finder (Google Directions API) ----------
-app.get("/api/routes", async (req, res) => {
-    const { from, to } = req.query;
-    if (!from || !to) {
-        return res.status(400).json({ error: "Missing from/to parameters" });
-    }
-
-    try {
-        const response = await axios.get("https://maps.googleapis.com/maps/api/directions/json", {
-            params: {
-                origin: from,
-                destination: to,
-                mode: "transit",
-                alternatives: true,
-                key: GOOGLE_MAPS_API_KEY,
-            },
-        });
-
-        const routes = (response.data.routes || []).map((route) => ({
-            summary: route.summary,
-            duration: route.legs[0]?.duration?.text || "Unknown",
-            distance: route.legs[0]?.distance?.text || "",
-            steps: route.legs[0]?.steps?.map((step) => ({
-                type: step.travel_mode.toLowerCase(),
-                routeName: step.transit_details?.line?.short_name || step.transit_details?.line?.name || "",
-                headsign: step.transit_details?.headsign || "",
-                departureStop: step.transit_details?.departure_stop?.name || "",
-                arrivalStop: step.transit_details?.arrival_stop?.name || "",
-                numStops: step.transit_details?.num_stops || "",
-                departureTime: step.transit_details?.departure_time?.text || "",
-                arrivalTime: step.transit_details?.arrival_time?.text || "",
-                distance: step.distance?.text || "",
-                duration: step.duration?.text || "",
-                instructions: step.html_instructions || "",
-            })) || [],
-        }));
-
-        res.json({ routes });
-    } catch (error) {
-        console.error("Error fetching transit routes:", error.message);
-        res.status(500).json({ error: "Failed to fetch transit routes" });
-    }
 });
 
 // ---------- Start Server ----------

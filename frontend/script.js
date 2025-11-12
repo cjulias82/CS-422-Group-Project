@@ -5,11 +5,9 @@ let destinationMarker = null;
 let directionsService;
 let directionsRenderer;
 
-const API_BASE = "https://looped-cnr8.onrender.com"
-
 // ---------- Load Google Maps ----------
 async function loadGoogleMaps() {
-    const res = await fetch("${API_BASE}/api/google-key");
+    const res = await fetch("https://looped-cnr8.onrender.com/api/google-key");
     const data = await res.json();
     if (!data.key) return console.error("Google Maps API key not available.");
 
@@ -53,7 +51,7 @@ async function showTransitRoutes(fromValue, toValue) {
     routeList.innerHTML = "<li>Loading routes...</li>";
 
     const res = await fetch(
-        `${API_BASE}/api/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`
+        `https://looped-cnr8.onrender.com/api/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`
     );
     const data = await res.json();
 
@@ -540,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const toValue = toInput.value.trim();
         if (!toValue) return alert("Please enter a destination.");
 
-        const res = await fetch("${API_BASE}/api/google-key");
+        const res = await fetch("https://looped-cnr8.onrender.com/api/google-key");
         const data = await res.json();
         const key = data.key;
         const bounds = new google.maps.LatLngBounds();

@@ -61,10 +61,11 @@ app.get("/", (req, res) => res.send("CTA Ventra API is running..."));
 
 // Route to fetch Google Maps API key (for development purposes)
 app.get("/api/google-key", (req, res) => {
-    if (!GOOGLE_MAPS_API_KEY) {
-        return res.status(500).json({ error: "Google Maps API key not configured" });
+    const key = process.env.GOOGLE_MAPS_BROWSER_KEY;
+    if (!key) {
+        return res.status(500).json({ error: "Frontend Google Maps key not configured" });
     }
-    res.json({ key: GOOGLE_MAPS_API_KEY });
+    res.json({ key });
 });
 
 // ---------- CTA Routes ----------

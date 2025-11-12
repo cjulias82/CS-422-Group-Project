@@ -16,7 +16,7 @@ async function loadGoogleMaps() {
     if (!data.key) return console.error("Google Maps API key not available.");
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&_=${Date.now()}`;
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);

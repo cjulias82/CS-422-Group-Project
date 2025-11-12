@@ -1,0 +1,124 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+}
+
+/* ---------- HEADER ---------- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background-color: #2f3e9e;
+    color: #fff;
+    padding: 15px 25px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+}
+
+/* Left side "LOOPED" link */
+header a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+header a:hover {
+    color: #00aaff;
+    transform: scale(1.05);
+}
+
+/* Responsive header for smaller screens */
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    header h1 {
+        margin-top: 10px;
+    }
+}
+
+/* ---------- MAIN LAYOUT ---------- */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#map {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* ---------- TRANSIT INFO ---------- */
+#transit-info {
+    width: 85%;
+    max-width: 900px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #333;
+    border-bottom: 2px solid #00aaff;
+    padding-bottom: 5px;
+}
+
+/* ---------- TRANSIT LIST ---------- */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+li:hover {
+    background-color: #eef7ff;
+    transform: scale(1.01);
+}
+
+li strong {
+    font-size: 1.1rem;
+    color: #222;
+}
+
+/* ---------- LINKS ---------- */
+a {
+    text-decoration: none;
+    color: #333;
+}
+
+a:hover {
+    color: #00aaff;
+}

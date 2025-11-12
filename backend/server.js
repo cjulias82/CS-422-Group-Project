@@ -11,19 +11,22 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Express app first
+// Initialize Express app
 const app = express();
-app.use(cors());
+app.use(cors()); // Allow cross-origin requests
 
-// Serve frontend files
-app.use(express.static(path.join(__dirname, "public")));
+// Serve frontend files (track.html, track.css, track.js)
+app.use(express.static(path.join(__dirname, "../frontend")));
 
+// Set environment variables
 const PORT = process.env.PORT || 5000;
 const CTA_TRAIN_KEY = process.env.CTA_TRAIN_KEY;
 const CTA_BUS_KEY = process.env.CTA_BUS_KEY;
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-// ---------- Helper ----------
+// ---------- Helper Functions ----------
+
+// Function to fetch data from the CTA API
 async function fetchCTAData(url, res, type) {
     try {
         const response = await axios.get(url);
@@ -34,18 +37,31 @@ async function fetchCTAData(url, res, type) {
     }
 }
 
-
 // ---------- Routes ----------
+
+// Basic health check route
 app.get("/", (req, res) => res.send("CTA Ventra API is running..."));
 
-//Train data
+// ---------- Google Maps API Integration ----------
+
+// Route to fetch Google Maps API key (for development purposes)
+app.get("/api/google-key", (req, res) => {
+    if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "Google Maps key not available in production" });
+    }
+    res.json({ key: GOOGLE_MAPS_API_KEY });
+});
+
+// ---------- CTA Routes ----------
+
+// Train data route
 app.get("/api/trains/:route", (req, res) => {
     const route = req.params.route;
     const url = `https://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=${CTA_TRAIN_KEY}&rt=${route}&outputType=JSON`;
     fetchCTAData(url, res, "train");
 });
 
-// Bus data
+// Bus data route
 app.get("/api/buses/:route", async (req, res) => {
     const route = req.params.route;
     if (!route) return res.status(400).json({ error: "Bus route is required" });
@@ -120,19 +136,8 @@ app.get("/api/alerts", async (req, res) => {
     }
 });
 
+// ---------- Nearby Stops (Google Places API) ----------
 
-// ---------- Google Maps API Integration ----------
-
-// (1) Serve the Google Maps key (only for development use)
-app.get("/api/google-key", (req, res) => {
-    // Optional: Restrict this so you don’t leak your key in production
-    if (process.env.NODE_ENV === "production") {
-        return res.status(403).json({ error: "Google Maps key not available in production" });
-    }
-    res.json({ key: GOOGLE_MAPS_API_KEY });
-});
-
-// (2) Proxy to Google Places API for nearby bus/train stops
 app.get("/api/nearby", async (req, res) => {
     const { lat, lng } = req.query;
     if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
@@ -142,35 +147,13 @@ app.get("/api/nearby", async (req, res) => {
         const response = await axios.get(url, {
             params: {
                 location: `${lat},${lng}`,
-                radius: 600, // meters
-                keyword: "Bus",
-                key: GOOGLE_MAPS_API_KEY,
-            },
-        });
-        res.json(response.data);
-    } catch (error) {
-        console.error("Error fetching nearby places:", error.message);
-        res.status(500).json({ error: "Failed to fetch nearby locations" });
-    }
-});
-
-// ---------- Nearby stops ----------
-app.get("/api/nearby", async (req, res) => {
-    const { lat, lng } = req.query;
-    if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
-
-    try {
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
-        const response = await axios.get(url, {
-            params: {
-                location: `${lat},${lng}`,
-                radius: 1000,
-                keyword: "transit_station",
+                radius: 1000,  // Meters
+                keyword: "transit_station",  // You can adjust the keyword to be more specific
                 key: GOOGLE_MAPS_API_KEY,
             },
         });
         // Simplify results
-        const results = response.data.results.map((place) => ({
+        const results = response.data.results.map(place => ({
             name: place.name,
             location: place.geometry.location,
             types: place.types,
@@ -179,81 +162,116 @@ app.get("/api/nearby", async (req, res) => {
 
         res.json({ count: results.length, results });
     } catch (error) {
-        console.error("Error fetching nearby routes:", error.message);
-        res.status(500).json({ error: "Failed to fetch nearby routes" });
+        console.error("Error fetching nearby transit stations:", error.message);
+        res.status(500).json({ error: "Failed to fetch nearby locations" });
     }
 });
 
-// ---------- Transit Routes (Bus + Train Options) ----------
-app.get("/api/routes", async (req, res) => {
-    const { from, to } = req.query;
-    if (!from || !to) {
-        return res.status(400).json({ error: "Missing 'from' or 'to' parameter" });
-    }
+// ---------- Nearby Stops + Live Vehicles (Google Places + CTA) ----------
+app.get("/api/tracknearby", async (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) return res.status(400).json({ error: "Missing lat/lng" });
 
     try {
-        const url = `https://maps.googleapis.com/maps/api/directions/json`;
-        const response = await axios.get(url, {
+        // 1️⃣ Fetch nearby stations from Google Places
+        const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
+        const placesRes = await axios.get(placesUrl, {
             params: {
-                origin: from,
-                destination: to,
-                mode: "transit",
-                alternatives: true, // <-- important: include multiple routes
+                location: `${lat},${lng}`,
+                radius: 1200, // meters
+                keyword: "bus stop OR train station OR subway station",
                 key: GOOGLE_MAPS_API_KEY,
             },
         });
 
-        const routes = response.data.routes.map((route) => {
-            const leg = route.legs[0];
-            const steps = leg.steps.map((s) => {
-                const mode = s.travel_mode.toUpperCase();
+        const stations = (placesRes.data.results || []).map((place) => ({
+            name: place.name,
+            location: place.geometry.location,
+            types: place.types,
+            address: place.vicinity,
+            source: "Google Places",
+        }));
 
-                if (mode === "WALKING") {
-                    return {
-                        type: "walk",
-                        instructions: s.html_instructions?.replace(/<[^>]+>/g, "") || "Walk",
-                        distance: s.distance?.text || "",
-                        duration: s.duration?.text || "",
-                    };
-                }
+        // 2️⃣ Fetch live bus data from CTA API
+        const busUrl = `https://www.ctabustracker.com/bustime/api/v3/getvehicles?key=${CTA_BUS_KEY}&format=json`;
+        const busRes = await axios.get(busUrl);
+        const buses = (busRes.data["bustime-response"]?.vehicle || []).map((v) => ({
+            id: v.vid,
+            route: v.rt,
+            lat: parseFloat(v.lat),
+            lng: parseFloat(v.lon),
+            heading: v.hdg,
+            destination: v.des,
+            delayed: v.dly === true,
+            source: "CTA Bus",
+        }));
 
-                if (mode === "TRANSIT") {
-                    const t = s.transit_details;
-                    const vehicleType = t.line.vehicle.type.toUpperCase();
-                    const isTrain = ["SUBWAY", "HEAVY_RAIL", "TRAM", "RAIL"].includes(vehicleType);
+        // 3️⃣ Fetch live train data from CTA API
+        const trainUrl = `https://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=${CTA_TRAIN_KEY}&outputType=JSON`;
+        const trainRes = await axios.get(trainUrl);
+        const trainsData = trainRes.data?.ctatt?.route || [];
+        const trains = trainsData.flatMap((route) =>
+            (route.train || []).map((t) => ({
+                id: t.rn,
+                route: route.rt,
+                lat: parseFloat(t.lat),
+                lng: parseFloat(t.lon),
+                heading: t.heading,
+                destination: t.destNm,
+                delayed: t.isDly === "1",
+                source: "CTA Train",
+            }))
+        );
 
-                    return {
-                        type: isTrain ? "train" : "bus",
-                        routeName: t.line.short_name || t.line.name,
-                        departureStop: t.departure_stop.name,
-                        arrivalStop: t.arrival_stop.name,
-                        numStops: t.num_stops,
-                        departureTime: t.departure_time?.text,
-                        arrivalTime: t.arrival_time?.text,
-                        headsign: t.headsign,
-                        color: t.line.color || (isTrain ? "#1565C0" : "#555"),
-                        agency: t.line.agencies?.[0]?.name || "CTA",
-                    };
-                }
+        // 4️⃣ Combine all results and filter nearby (within ~1km)
+        function distance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) *
+                Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) *
+                Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // km
+        }
 
-                return null;
-            }).filter(Boolean);
+        const nearbyBuses = buses.filter(
+            (b) => distance(lat, lng, b.lat, b.lng) <= 1.2
+        );
+        const nearbyTrains = trains.filter(
+            (t) => distance(lat, lng, t.lat, t.lng) <= 1.5
+        );
 
-            return {
-                summary: route.summary || "Transit Route",
-                duration: leg.duration.text,
-                startAddress: leg.start_address,
-                endAddress: leg.end_address,
-                steps,
-            };
+        res.json({
+            center: { lat: parseFloat(lat), lng: parseFloat(lng) },
+            stations: stations,
+            buses: nearbyBuses,
+            trains: nearbyTrains,
+            counts: {
+                stations: stations.length,
+                buses: nearbyBuses.length,
+                trains: nearbyTrains.length,
+            },
         });
-
-        res.json({ routes });
     } catch (error) {
-        console.error("Error fetching transit routes:", error.message);
-        res.status(500).json({ error: "Failed to fetch transit routes" });
+        console.error("Error fetching nearby data:", error.message);
+        res.status(500).json({ error: "Failed to fetch nearby transit data" });
     }
 });
 
+// Serve the front-end application
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+app.get('/track', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'track.html'));
+});
+
 // ---------- Start Server ----------
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});

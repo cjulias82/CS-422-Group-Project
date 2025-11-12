@@ -292,7 +292,7 @@ app.get("/api/routes", async (req, res) => {
             const steps = leg.steps.map((s) => {
                 const mode = s.travel_mode.toUpperCase();
 
-                // 🟢 Handle walking
+                // Handle walking
                 if (mode === "WALKING") {
                     return {
                         type: "walking",
@@ -302,7 +302,7 @@ app.get("/api/routes", async (req, res) => {
                     };
                 }
 
-                // 🟢 Handle transit (bus/train/subway)
+                // Handle transit (bus/train/subway)
                 if (mode === "TRANSIT") {
                     const t = s.transit_details;
                     const vehicleType = t.line.vehicle.type.toUpperCase();

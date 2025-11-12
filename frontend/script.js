@@ -564,17 +564,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (destinationMarker) destinationMarker.setMap(null);
 
         if (!fromValue) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
                 fromMarker = new google.maps.Marker({
-                    position: location,
+                    position: { lat: latitude, lng: longitude },
                     map,
-                    icon: { url: `http://maps.google.com/mapfiles/ms/icons/blue-dot.png` },
+                    icon: { url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" },
                 });
-                bounds.extend(location);
+                bounds.extend({ lat: latitude, lng: longitude });
+
+                // 🟢 use coordinates directly
+                await showTransitRoutes(`${latitude},${longitude}`, toValue);
             });
         } else {
             fromMarker = await geocode(fromValue, "blue");
+            await showTransitRoutes(fromValue, toValue);
         }
 
         destinationMarker = await geocode(toValue, "red");

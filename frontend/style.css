@@ -25,44 +25,29 @@ nav {
 
 main {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 3rem;
     padding: 2rem;
-    min-height: calc(100vh - 200px);
-    box-sizing: border-box;
 }
 
 .info {
-    flex: 1 1 350px;
-    max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    text-align: left;
+    width: 40%;
 }
 
+/* Move only the map block left; does not affect siblings */
 .map-container {
-    flex: 1 1 600px;
+    width: 70%;
     height: 500px;
 }
 
+/* Keep it normal on smaller screens */
 @media (max-width: 900px) {
-    main {
-        align-items: flex-start;
-        min-height: auto;
-    }
-
     .map-container {
-        width: 100%;
-        height: 400px;
-        margin-top: 2rem;
+        transform: none;
     }
 }
 
-
+/* (optional) make sure the map has explicit size */
 #map {
     width: 100%;
     max-width: 900px;

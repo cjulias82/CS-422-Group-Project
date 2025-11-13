@@ -6,13 +6,12 @@ const axios = require("axios");
 const app = express();
 app.use(cors({origin: true}));
 
-// --- READ ENV VARIABLES (Firebase Functions V2 + .env support) ---
-const GOOGLE_BROWSER_KEY = process.env.GOOGLE_MAPS_API_KEY_BROWSER;
-const GOOGLE_SERVER_KEY = process.env.GOOGLE_MAPS_API_KEY_SERVER;
+const GOOGLE_BROWSER_KEY = process.env.GOOGLE_BROWSER_KEY;
+const GOOGLE_SERVER_KEY = process.env.GOOGLE_SERVER_KEY;
 
 console.log("Loaded environment keys:", {
-  browser: GOOGLE_BROWSER_KEY ? "OK" : "MISSING",
-  server: GOOGLE_SERVER_KEY ? "OK" : "MISSING",
+  // eslint-disable-next-line max-len
+  browser: GOOGLE_BROWSER_KEY ? "OK" : "MISSING", server: GOOGLE_SERVER_KEY ? "OK" : "MISSING",
 });
 
 // --------------------------------------------------------------
@@ -42,11 +41,8 @@ app.get("/routes", async (req, res) => {
 
     const response = await axios.get(url, {
       params: {
-        origin: from,
-        destination: to,
-        mode: "transit",
-        alternatives: true,
-        key: GOOGLE_SERVER_KEY,
+        // eslint-disable-next-line max-len
+        origin: from, destination: to, mode: "transit", alternatives: true, key: GOOGLE_SERVER_KEY,
       },
     });
 
@@ -65,11 +61,7 @@ app.get("/routes", async (req, res) => {
 
       if (!leg) {
         return {
-          duration: "",
-          distance: "",
-          arrival: "",
-          departure: "",
-          steps: [],
+          duration: "", distance: "", arrival: "", departure: "", steps: [],
         };
       }
 
@@ -101,38 +93,25 @@ app.get("/routes", async (req, res) => {
 
           const vehicle = t.line.vehicle ? t.line.vehicle.type : "";
           const vehicleUpper = vehicle ? vehicle.toUpperCase() : "";
-          const isTrain =
-                        vehicleUpper === "SUBWAY" ||
-                        vehicleUpper === "HEAVY_RAIL" ||
-                        vehicleUpper === "TRAM" ||
-                        vehicleUpper === "RAIL";
+          // eslint-disable-next-line max-len
+          const isTrain = vehicleUpper === "SUBWAY" || vehicleUpper === "HEAVY_RAIL" || vehicleUpper === "TRAM" || vehicleUpper === "RAIL";
 
           return {
             type: isTrain ? "train" : "bus",
-            routeName:
-                            t.line.short_name ?
-                                t.line.short_name :
-                                t.line.name ?
-                                    t.line.name :
-                                    "",
+            // eslint-disable-next-line max-len
+            routeName: t.line.short_name ? t.line.short_name : t.line.name ? t.line.name : "",
             headsign: t.headsign ? t.headsign : "",
             departureStop: t.departure_stop ? t.departure_stop.name : "",
             arrivalStop: t.arrival_stop ? t.arrival_stop.name : "",
             numStops: t.num_stops ? t.num_stops : 0,
-            departureTime:
-                            t.departure_time ? t.departure_time.text : "",
-            arrivalTime:
-                            t.arrival_time ? t.arrival_time.text : "",
+            departureTime: t.departure_time ? t.departure_time.text : "",
+            arrivalTime: t.arrival_time ? t.arrival_time.text : "",
             distance: s.distance ? s.distance.text : "",
             duration: s.duration ? s.duration.text : "",
             instructions: s.html_instructions ? s.html_instructions : "",
             color: t.line.color ? t.line.color : isTrain ? "#1565C0" : "#555",
-            agency:
-                            t.line.agencies &&
-                            t.line.agencies.length > 0 &&
-                            t.line.agencies[0].name ?
-                                t.line.agencies[0].name :
-                                "CTA",
+            // eslint-disable-next-line max-len
+            agency: t.line.agencies && t.line.agencies.length > 0 && t.line.agencies[0].name ? t.line.agencies[0].name : "CTA",
           };
         }
 

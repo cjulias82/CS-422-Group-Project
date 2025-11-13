@@ -10,7 +10,7 @@ let directionsRenderer;
 // ------------------------
 const BACKEND_URL = window.location.hostname.includes("localhost")
     ? "http://localhost:5000"
-    : "https://us-central1-looped-318cc.cloudfunctions.net/api";
+    : "https://api-dt26u5phza-uc.a.run.app";
 
 // ---------- Load Google Maps ----------
 async function loadGoogleMaps() {

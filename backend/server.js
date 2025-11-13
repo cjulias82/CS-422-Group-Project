@@ -13,22 +13,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express app
 const app = express();
-const allowedOrigins = [
-    "https://cs-422-group-project.onrender.com",  // your frontend Render app
-    "http://localhost:5000"                       // for local testing
-];
-
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-    })
-);
+app.use(cors()); // Allow cross-origin requests
 
 // Serve frontend files (track.html, track.css, track.js)
 app.use(express.static(path.join(__dirname, "../frontend")));

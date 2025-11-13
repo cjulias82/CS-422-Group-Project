@@ -1,4 +1,4 @@
-const {onRequest} = require("firebase-functions/v2/https");
+const {onRequest} = require("firebase-functions");
 
 const express = require("express");
 const cors = require("cors");

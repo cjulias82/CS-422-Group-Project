@@ -292,7 +292,7 @@ app.get("/api/routes", async (req, res) => {
                 destination: to,
                 mode: "transit",
                 alternatives: true,
-                key: GOOGLE_MAPS_API_KEY,
+                key: serverKey,
             },
         });
 
@@ -341,7 +341,7 @@ app.get("/api/routes", async (req, res) => {
                     };
                 }
 
-                // 🟡 Default fallback
+                // Default fallback
                 return {
                     type: "other",
                     instructions: s.html_instructions || "Continue",

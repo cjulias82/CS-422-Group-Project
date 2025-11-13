@@ -7,8 +7,8 @@ const app = express();
 app.use(cors({origin: true}));
 
 // --- READ ENV VARIABLES (Firebase Functions V2 + .env support) ---
-const GOOGLE_BROWSER_KEY = process.env.GOOGLE_BROWSER_KEY;
-const GOOGLE_SERVER_KEY = process.env.GOOGLE_SERVER_KEY;
+const GOOGLE_BROWSER_KEY = process.env.GOOGLE_MAPS_API_KEY_BROWSER;
+const GOOGLE_SERVER_KEY = process.env.GOOGLE_MAPS_API_KEY_SERVER;
 
 console.log("Loaded environment keys:", {
   browser: GOOGLE_BROWSER_KEY ? "OK" : "MISSING",

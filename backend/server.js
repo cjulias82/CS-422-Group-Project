@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const allowedOrigins = [
     "http://localhost:5000",
-    "https://cjulias82.github.io/CS-422-Group-Project/", // GitHub Pages URL
+    "https://yourusername.github.io", // GitHub Pages URL
     "https://cs-422-group-project.onrender.com" // Render frontend
 ];
 

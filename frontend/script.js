@@ -9,7 +9,8 @@ let directionsService;
 let directionsRenderer;
 
 // Firebase Cloud Function API base:
-const API_BASE = "https://api-dt26u5phza-uc.a.run.app";
+const API_BASE = "https://us-central1-looped-318cc.cloudfunctions.net/api";
+    //"https://api-dt26u5phza-uc.a.run.app";
 
 /* ----------------------------------------------
    LOAD GOOGLE MAPS

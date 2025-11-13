@@ -5,18 +5,14 @@ let destinationMarker = null;
 let directionsService;
 let directionsRenderer;
 
-const BACKEND_URL = window.location.hostname.includes("localhost")
-    ? "http://localhost:5000"
-    : "https://looped-cnr8.onrender.com";
-
 // ---------- Load Google Maps ----------
 async function loadGoogleMaps() {
-    const res = await fetch(`${BACKEND_URL}/api/google-key`);
+    const res = await fetch("http://localhost:5000/api/google-key");
     const data = await res.json();
     if (!data.key) return console.error("Google Maps API key not available.");
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&_=${Date.now()}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
@@ -55,7 +51,7 @@ async function showTransitRoutes(fromValue, toValue) {
     routeList.innerHTML = "<li>Loading routes...</li>";
 
     const res = await fetch(
-        `${BACKEND_URL}/api/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`
+        `http://localhost:5000/api/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`
     );
     const data = await res.json();
 
@@ -542,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const toValue = toInput.value.trim();
         if (!toValue) return alert("Please enter a destination.");
 
-        const res = await fetch("https://looped-cnr8.onrender.com/api/google-key");
+        const res = await fetch("http://localhost:5000/api/google-key");
         const data = await res.json();
         const key = data.key;
         const bounds = new google.maps.LatLngBounds();
@@ -577,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 bounds.extend({ lat: latitude, lng: longitude });
 
-                // 🟢 use coordinates directly
+                // use coordinates directly
                 await showTransitRoutes(`${latitude},${longitude}`, toValue);
             });
         } else {

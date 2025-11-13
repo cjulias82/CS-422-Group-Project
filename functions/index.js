@@ -1,4 +1,4 @@
-const {onRequest} = require("firebase-functions");
+const functions = require("firebase-functions");
 
 const express = require("express");
 const cors = require("cors");
@@ -57,4 +57,4 @@ app.get("/routes", async (req, res) => {
   }
 });
 
-exports.api = onRequest(app);
+exports.api = functions.https.onRequest(app);

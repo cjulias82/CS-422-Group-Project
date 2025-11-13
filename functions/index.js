@@ -45,7 +45,7 @@ app.use(cors({origin: true}));
 // Google Maps Browser Key
 // -------------------------
 app.get("/google-key", (req, res) => {
-  const key = process.env.GOOGLE_MAPS_API_KEY_BROWSER;
+  const key = functions.config().google.key_browser;
   if (!key) return res.status(500).json({error: "No browser key configured"});
   res.json({key});
 });
@@ -68,7 +68,7 @@ app.get("/routes", async (req, res) => {
             origin: from,
             destination: to,
             mode: "transit",
-            key: process.env.GOOGLE_MAPS_API_KEY_SERVER, // <-- SERVER key
+            key: functions.config().google.key_server, // <-- SERVER key
           },
         },
     );

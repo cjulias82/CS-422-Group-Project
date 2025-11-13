@@ -41,6 +41,7 @@ app.get("/routes", async (req, res) => {
             origin: from,
             destination: to,
             mode: "transit",
+            region: "us",
             key: serverKey,
           },
         },

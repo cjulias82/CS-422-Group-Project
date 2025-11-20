@@ -163,6 +163,87 @@ app.get("/routes", async (req, res) => {
   }
 });
 
+// Tracks nearby page
+app.get("/tracknearby", async (req, res) => {
+    const { lat, lng } = req.query;
+
+    if (!lat || !lng) {
+        return res.status(400).json({ error: "Missing lat/lng" });
+    }
+
+    try {
+        // 1. Google Places nearby transit stations
+        const placesRes = await axios.get(
+            "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+            {
+                params: {
+                    location: `${lat},${lng}`,
+                    radius: 1200,
+                    keyword: "bus stop OR train station OR subway station",
+                    key: GOOGLE_SERVER_KEY,
+                },
+            }
+        );
+
+        const stations = (placesRes.data.results || []).map((place) => ({
+            name: place.name,
+            location: place.geometry.location,
+            address: place.vicinity,
+        }));
+
+        // 2. CTA Bus tracker
+        const busRes = await axios.get(
+            "https://www.ctabustracker.com/bustime/api/v3/getvehicles",
+            {
+                params: {
+                    key: CTA_BUS_KEY,
+                    format: "json",
+                },
+            }
+        );
+
+        const buses =
+            busRes.data["bustime-response"]?.vehicle?.map((v) => ({
+                id: v.vid,
+                route: v.rt,
+                lat: parseFloat(v.lat),
+                lng: parseFloat(v.lon),
+                destination: v.des,
+            })) || [];
+
+        // 3. CTA Train tracker
+        const trainsRes = await axios.get(
+            "https://lapi.transitchicago.com/api/1.0/ttpositions.aspx",
+            {
+                params: {
+                    key: CTA_TRAIN_KEY,
+                    outputType: "JSON",
+                },
+            }
+        );
+
+        const trainsRaw = trainsRes.data?.ctatt?.route || [];
+        const trains = trainsRaw.flatMap((route) =>
+            (route.train || []).map((t) => ({
+                id: t.rn,
+                route: route.rt,
+                lat: parseFloat(t.lat),
+                lng: parseFloat(t.lon),
+                destination: t.destNm,
+            }))
+        );
+
+        res.json({
+            stations,
+            buses,
+            trains,
+        });
+    } catch (err) {
+        console.error("TRACKNEARBY error:", err.message);
+        res.status(500).json({ error: "Failed to fetch nearby transit data" });
+    }
+});
+
 // --------------------------------------------------------------
 // EXPORT FUNCTION
 // --------------------------------------------------------------

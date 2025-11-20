@@ -6,9 +6,11 @@ let autoRefreshInterval;
 const defaultLocation = { lat: 41.8786, lng: -87.6405 }; // Chicago Union Station fallback
 const defaultZoom = 13;
 
+const API_BASE = "https://api-dt26u5phza-uc.a.run.app";
+
 // ---------- Load Google Maps ----------
 async function loadGoogleMaps() {
-    const res = await fetch("http://localhost:5000/api/google-key");
+    const res = await fetch(`${API_BASE}/google-key`);
     const data = await res.json();
     if (!data.key) return console.error("Google Maps API key not available.");
 
@@ -76,7 +78,7 @@ function initDefaultMap() {
  * Fetch nearby stations + live CTA vehicles
  */
 function fetchNearbyTransit(lat, lng) {
-    const url = `http://localhost:5000/api/tracknearby?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+    const url = `${API_BASE}/tracknearby?lat=${lat}&lng=${lng}`;
     console.log("Requesting nearby transit:", url);
 
     fetch(url)

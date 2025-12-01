@@ -126,7 +126,31 @@
 <!--    <label><strong>Track</strong></label>-->
 
 
-    <div>Preferences</div>
+    <div class="preferences-dropdown">
+        <label><strong>Preferences</strong></label>
+        <div class="custom-dropdown">
+            <button id="preferencesToggle" class="dropdown-toggle">Transit Options ▾</button>
+
+            <div id="preferencesMenu" class="dropdown-menu">
+
+                <h4>Transit Preference</h4>
+
+                <label class="pref-option">
+                    <input type="checkbox" id="prefBus" />
+                    Bus
+                </label>
+
+                <label class="pref-option">
+                    <input type="checkbox" id="prefTrain" />
+                    L Train
+                </label>
+
+                <button id="savePreferencesBtn" class="plan-btn" style="margin-top:10px;">
+                    Save Preference
+                </button>
+            </div>
+        </div>
+    </div>
     <div>Contact</div>
 </footer>
 

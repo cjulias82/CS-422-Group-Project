@@ -47,13 +47,21 @@ window.initMap = function () {
     });
 };
 
+function clearDisplayedRoute() {
+    if (directionsRenderer) {
+        // Clears the current route polyline from the map
+        directionsRenderer.setDirections({ routes: [] });
+    }
+}
+
 // ---------- Show Transit Routes ----------
 async function showTransitRoutes(fromValue, toValue) {
     const routeList = document.getElementById("routeList");
     routeList.innerHTML = "<li>Loading routes...</li>";
 
     const res = await fetch(
-        `${API_BASE}/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`);
+        `${API_BASE}/routes?from=${encodeURIComponent(fromValue)}&to=${encodeURIComponent(toValue)}`
+    );
     const data = await res.json();
 
     if (!data.routes || data.routes.length === 0) {
@@ -64,7 +72,50 @@ async function showTransitRoutes(fromValue, toValue) {
     routeList.innerHTML = "";
     const saved = JSON.parse(localStorage.getItem("savedRoutes") || "[]");
 
+    // Load preferences once per call
+    const prefs = JSON.parse(localStorage.getItem("preferences") || "{}");
+    const showBus = prefs.bus !== false;   // default true
+    const showTrain = prefs.train !== false; // default true
+
     data.routes.forEach((route, index) => {
+        // ---------- 1) Decide if this ROUTE is allowed at all ----------
+        const hasBus = route.steps.some((s) => s.type === "bus");
+        const hasTrain = route.steps.some((s) => s.type === "train");
+
+        let routeAllowed = true;
+
+        if (showBus && !showTrain) {
+            // Bus only
+            routeAllowed = hasBus;
+        } else if (!showBus && showTrain) {
+            // Train only
+            routeAllowed = hasTrain;
+        } else if (!showBus && !showTrain) {
+            // Neither selected => no routes allowed
+            routeAllowed = false;
+        } else {
+            // Both selected => all routes allowed
+            routeAllowed = true;
+        }
+
+        if (!routeAllowed) {
+            // Skip this route entirely
+            return;
+        }
+
+        // ---------- 2) Now filter out unwanted steps inside the route ----------
+        route.steps = route.steps.filter((s) => {
+            if (s.type === "bus" && !showBus) return false;
+            if (s.type === "train" && !showTrain) return false;
+            return true; // keep walking + allowed transit
+        });
+
+        // Safety check: if somehow nothing remains, skip it
+        if (route.steps.length === 0) {
+            return;
+        }
+
+        // ---------- 3) Build the UI item ----------
         const item = document.createElement("li");
         item.classList.add("route-item");
 
@@ -88,17 +139,17 @@ async function showTransitRoutes(fromValue, toValue) {
         }));
 
         const stepsHTML = route.steps
-            .filter(s => s.type === "bus" || s.type === "train")
+            .filter((s) => s.type === "bus" || s.type === "train")
             .map((s) => {
-                let iconUrl = s.type === "train" ? "icons/train.png" : "icons/bus.png";
+                const iconUrl = s.type === "train" ? "icons/train.png" : "icons/bus.png";
                 const iconImg = `<img src="${iconUrl}" class="route-icon" alt="${s.type}" />`;
 
                 return `
-            <div class="route-step">
-                ${iconImg}
-                <span>${s.departureTime || ""} → ${s.arrivalTime || ""}</span>
-                <span class="route-chip ${s.type}">${s.routeName}</span>
-            </div>`;
+                    <div class="route-step">
+                        ${iconImg}
+                        <span>${s.departureTime || ""} → ${s.arrivalTime || ""}</span>
+                        <span class="route-chip ${s.type}">${s.routeName}</span>
+                    </div>`;
             })
             .join("");
 
@@ -121,17 +172,15 @@ async function showTransitRoutes(fromValue, toValue) {
             const isOpen = dropdown.style.display === "block";
 
             // Close all other dropdowns first
-            document.querySelectorAll(".directions-dropdown").forEach(el => (el.style.display = "none"));
-            document.querySelectorAll(".route-item").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".directions-dropdown").forEach((el) => (el.style.display = "none"));
+            document.querySelectorAll(".route-item").forEach((el) => el.classList.remove("active"));
 
             if (isOpen) {
-                // If this one was open, close it
                 dropdown.style.display = "none";
                 item.classList.remove("active");
                 return;
             }
 
-            // Otherwise, open it
             item.classList.add("active");
             dropdown.style.display = "block";
 
@@ -147,49 +196,69 @@ async function showTransitRoutes(fromValue, toValue) {
         favBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             const starImg = favBtn.querySelector(".fav-icon");
+
             const savedRoutes = JSON.parse(localStorage.getItem("savedRoutes") || "[]");
 
-            const alreadySaved = savedRoutes.some(
-                (r) => r.name === name && r.from === fromValue && r.to === toValue
+            const existingIndex = savedRoutes.findIndex(
+                (r) => r.from === fromValue && r.to === toValue && r.routeIndex === index
             );
 
-            if (alreadySaved) {
-                const updated = savedRoutes.filter(
-                    (r) => !(r.name === name && r.from === fromValue && r.to === toValue)
-                );
-                localStorage.setItem("savedRoutes", JSON.stringify(updated));
-                starImg.src = "icons/favorite.png";
-            } else {
-                savedRoutes.push({
-                    name,
-                    from: fromValue,
-                    to: toValue,
-                    duration: route.duration,
-                    routeIndex: index,
-                    steps: route.steps.map((s) => ({
-                        type: s.type,
-                        routeName: s.routeName || "",
-                        departureStop: s.departureStop || "",
-                        arrivalStop: s.arrivalStop || "",
-                        numStops: s.numStops || "",
-                        departureTime: s.departureTime || "",
-                        arrivalTime: s.arrivalTime || "",
-                        distance: s.distance || "",
-                        durationStep: s.duration || "",
-                        instructions: s.instructions || "",
-                        color: s.color || "#555",
-                    })),
-                    timestamp: Date.now(),
-                });
+            if (existingIndex !== -1) {
+                savedRoutes.splice(existingIndex, 1);
                 localStorage.setItem("savedRoutes", JSON.stringify(savedRoutes));
-                starImg.src = "icons/star.png";
+                starImg.src = "icons/favorite.png";
+                populateFavorites();
+                return;
             }
 
+            const defaultRouteName =
+                route.steps?.[0]?.routeName
+                    ? `${route.steps[0].routeName} (${route.duration})`
+                    : `Route (${route.duration})`;
+
+            const customName = prompt("Name this route:", defaultRouteName);
+            if (!customName) return;
+
+            const nameToSave = customName.trim();
+            if (nameToSave.length === 0) return;
+
+            savedRoutes.push({
+                name: nameToSave,
+                from: fromValue,
+                to: toValue,
+                duration: route.duration,
+                routeIndex: index,
+                steps: route.steps.map((s) => ({
+                    type: s.type,
+                    routeName: s.routeName || "",
+                    routeId: s.routeId || s.routeName || "",
+                    departureStop: s.departureStop || "",
+                    arrivalStop: s.arrivalStop || "",
+                    numStops: s.numStops || "",
+                    departureTime: s.departureTime || "",
+                    arrivalTime: s.arrivalTime || "",
+                    distance: s.distance || "",
+                    durationStep: s.duration || "",
+                    instructions: s.instructions || "",
+                    color: s.color || "#555",
+                    lat: s.lat || null,
+                    lng: s.lng || null
+                })),
+                timestamp: Date.now(),
+            });
+
+            localStorage.setItem("savedRoutes", JSON.stringify(savedRoutes));
+            starImg.src = "icons/star.png";
             populateFavorites();
         });
 
         routeList.appendChild(item);
     });
+
+    // If no routes survived the filtering, show a message
+    if (!routeList.hasChildNodes()) {
+        routeList.innerHTML = "<li>No routes match your preferences.</li>";
+    }
 }
 
 async function drawRouteOnMap(fromValue, toValue, routeIndex = 0, dropdown = null) {
@@ -277,6 +346,34 @@ async function drawRouteOnMap(fromValue, toValue, routeIndex = 0, dropdown = nul
     });
 }
 
+function drawSavedRouteOnMap(route) {
+    if (!route.steps) return false;
+
+    const coordSteps = route.steps.filter(s => s.lat && s.lng);
+
+    if (coordSteps.length < 2) {
+        return false; // not enough data to draw a line
+    }
+
+    const path = coordSteps.map(s => ({
+        lat: parseFloat(s.lat),
+        lng: parseFloat(s.lng)
+    }));
+
+    new google.maps.Polyline({
+        map,
+        path,
+        strokeColor: "#2f3e9e",
+        strokeOpacity: 0.9,
+        strokeWeight: 4,
+    });
+
+    const bounds = new google.maps.LatLngBounds();
+    path.forEach(p => bounds.extend(p));
+    map.fitBounds(bounds);
+
+    return true;
+}
 
 // ---------- Favorites Panel Integration ----------
 function populateFavorites() {
@@ -303,14 +400,17 @@ function populateFavorites() {
 
         // Click name to open route
         item.querySelector(".fav-name").addEventListener("click", async () => {
+            clearDisplayedRoute();
             toggle.textContent = r.name;
             menu.style.display = "none";
 
-            // Draw route on map
-            await showTransitRoutes(r.from, r.to);
-            await drawRouteOnMap(r.from, r.to, r.routeIndex ?? 0);
+            // First try drawing saved coordinates (so the map matches the saved bus)
+            if (!drawSavedRouteOnMap(r)) {
+                // fallback only if your saved data doesn't include coordinates yet
+                await drawRouteOnMap(r.from, r.to, r.routeIndex ?? 0);
+            }
 
-            // Open route detail side panel
+            // Always show the saved steps in the panel
             showFavoriteRoutePanel(r);
         });
 
@@ -334,11 +434,27 @@ document.getElementById("favoritesToggle")?.addEventListener("click", () => {
     menu.style.display = menu.style.display === "block" ? "none" : "block";
 });
 
+// Preferences dropdown toggle
+document.getElementById("preferencesToggle")?.addEventListener("click", () => {
+    const menu = document.getElementById("preferencesMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+});
+
 // Close dropdown when clicking outside
 document.addEventListener("click", (e) => {
-    const dropdown = document.querySelector(".custom-dropdown");
-    if (!dropdown.contains(e.target)) {
-        document.getElementById("favoritesMenu").style.display = "none";
+    const favoritesDropdown = document.querySelector(".favorites-dropdown .custom-dropdown");
+    const preferencesDropdown = document.querySelector(".preferences-dropdown .custom-dropdown");
+
+    // Close Favorites menu
+    if (favoritesDropdown && !favoritesDropdown.contains(e.target)) {
+        const favMenu = document.getElementById("favoritesMenu");
+        if (favMenu) favMenu.style.display = "none";
+    }
+
+    // Close Preferences menu
+    if (preferencesDropdown && !preferencesDropdown.contains(e.target)) {
+        const prefMenu = document.getElementById("preferencesMenu");
+        if (prefMenu) prefMenu.style.display = "none";
     }
 });
 
@@ -367,6 +483,7 @@ document.getElementById("deleteFavoriteBtn")?.addEventListener("click", () => {
 
 // When user selects a favorite route
 document.getElementById("favoritesSelect")?.addEventListener("change", async (e) => {
+    clearDisplayedRoute();
     const index = e.target.value;
     if (index === "") return;
 
@@ -431,14 +548,12 @@ function showFavoriteRoutePanel(route) {
     const content = document.getElementById("routeDetailsContent");
     if (!panel || !content) return;
 
-    // Step icons
     const icons = {
         walk: "icons/walking.png",
         bus: "icons/bus.png",
         train: "icons/train.png",
     };
 
-    // CTA line colors
     const lineColors = {
         "Red Line": "#C60C30",
         "Blue Line": "#00A1DE",
@@ -450,21 +565,44 @@ function showFavoriteRoutePanel(route) {
         "Yellow Line": "#F9E300",
     };
 
-    // Generate step HTML
     const stepsHTML = (route.steps || [])
         .map((s) => {
             const icon = icons[s.type] || icons.walk;
-            const lineColor = Object.entries(lineColors).find(([name]) =>
-                (s.routeName || "").toLowerCase().includes(name.toLowerCase())
-            )?.[1] || "#555";
+
+            // pick a color if it's a CTA rail line, otherwise fall back to what we saved
+            const lineColor =
+                Object.entries(lineColors).find(([name]) =>
+                    (s.routeName || "").toLowerCase().includes(name.toLowerCase())
+                )?.[1] || s.color || "#555";
+
+            const isWalking = s.type === "walk";
+
+            // main instruction line
+            const instructionText = s.instructions
+                ? s.instructions
+                : isWalking
+                    ? `Walk ${s.distance || ""} (${s.durationStep || s.duration || ""})`
+                    : `${s.departureStop || ""} → ${s.arrivalStop || ""}`;
+
+            // detail line: times, stops, distance
+            const detailParts = [];
+            if (s.departureTime && s.arrivalTime) {
+                detailParts.push(`${s.departureTime} → ${s.arrivalTime}`);
+            }
+            if (s.numStops) {
+                detailParts.push(`${s.numStops} stops`);
+            }
+            if (s.distance) {
+                detailParts.push(s.distance);
+            }
+            const detailText = detailParts.join(" • ");
 
             return `
             <div class="step">
                 <img src="${icon}" class="step-icon" />
                 <div>
-                    <strong>${s.instructions || s.routeName || s.headsign || "Continue"}</strong><br>
-                    <small>${s.duration || ""}${s.distance ? ` • ${s.distance}` : ""}</small><br>
-                    ${s.numStops ? `<small>${s.numStops} stops</small><br>` : ""}
+                    <strong>${instructionText}</strong><br>
+                    ${detailText ? `<small>${detailText}</small><br>` : ""}
                     ${(s.type === "train" || s.type === "bus") && s.routeName
                 ? `<span class="route-chip" style="background-color:${lineColor};color:white">${s.routeName}</span>`
                 : ""}
@@ -474,7 +612,6 @@ function showFavoriteRoutePanel(route) {
         })
         .join("");
 
-    // Build the panel content
     content.innerHTML = `
         <h2>${route.name}</h2>
         <p><strong>From:</strong> ${route.from}</p>
@@ -515,6 +652,32 @@ document.getElementById("closeRouteDetails")?.addEventListener("click", () => {
     document.getElementById("routeDetailsPanel").classList.remove("active");
 });
 
+
+// ---------- Preferences System ----------
+function loadPreferences() {
+    const prefs = JSON.parse(localStorage.getItem("preferences") || "{}");
+
+    document.getElementById("prefBus").checked = prefs.bus ?? true;
+    document.getElementById("prefTrain").checked = prefs.train ?? true;
+}
+
+document.getElementById("savePreferencesBtn")?.addEventListener("click", () => {
+    const busChecked = document.getElementById("prefBus").checked;
+    const trainChecked = document.getElementById("prefTrain").checked;
+
+    localStorage.setItem(
+        "preferences",
+        JSON.stringify({
+            bus: busChecked,
+            train: trainChecked,
+        })
+    );
+
+    alert("Preferences saved!");
+});
+
+loadPreferences();
+
 // ---------- Side Panel ----------
 document.addEventListener("DOMContentLoaded", () => {
     populateFavorites();
@@ -535,6 +698,8 @@ document.addEventListener("DOMContentLoaded", () => {
     closePanelBtn.addEventListener("click", () => sidePanel.classList.remove("active"));
 
     planBtn.addEventListener("click", async () => {
+        clearDisplayedRoute();
+
         const fromValue = fromInput.value.trim();
         const toValue = toInput.value.trim();
         if (!toValue) return alert("Please enter a destination.");
@@ -574,7 +739,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 bounds.extend({ lat: latitude, lng: longitude });
 
-                // use coordinates directly
                 await showTransitRoutes(`${latitude},${longitude}`, toValue);
             });
         } else {

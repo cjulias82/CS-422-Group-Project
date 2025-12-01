@@ -32,11 +32,12 @@ main {
 
 .info {
     width: 40%;
+    margin-left: 100px;
 }
 
 /* Move only the map block left; does not affect siblings */
 .map-container {
-    width: 70%;
+    width: 80%;
     height: 500px;
 }
 
@@ -113,7 +114,7 @@ footer {
     position: fixed;
     top: 0;
     left: -100%;
-    width: 320px;
+    width: 650px;
     height: 100%;
     background: #fff;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
@@ -168,7 +169,7 @@ footer {
     margin-top: 1em;
     border-top: 1px solid #ddd;
     padding-top: 1em;
-    max-height: 300px;
+    max-height: calc(100vh - 260px);
     overflow-y: auto;
 }
 
@@ -326,11 +327,11 @@ footer {
     position: fixed;
     top: 0;
     left: 0;
-    width: 35%;
+    width: 650px !important;     /* smaller panel (you can adjust) */
     height: 100%;
     background: #fff;
     box-shadow: 2px 0 10px rgba(0,0,0,0.15);
-    padding: 2rem;
+    padding: 2.5rem;             /* bigger padding for readability */
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
@@ -343,70 +344,72 @@ footer {
 
 #routeDetailsPanel h2 {
     color: #3547a1;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 2rem;             /* bigger title */
+    margin-bottom: 1rem;
 }
 
 .route-steps {
-    margin-top: 1.5rem;
+    margin-top: 2rem;
 }
 
 .step {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: 0.75rem 0;
+    gap: 18px;                   /* more spacing */
+    margin: 1rem 0;
+    font-size: 1.2rem;           /* bigger text */
 }
 
 .step-icon {
-    width: 22px;
-    height: 22px;
+    width: 32px;                 /* bigger icons */
+    height: 32px;
 }
 
 .directions-list {
-    margin-top: 15px;
-    padding-top: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
     border-top: 1px solid #ddd;
 }
 
 .directions-dropdown {
-    margin-top: 10px;
-    padding: 10px;
+    margin-top: 14px;
+    padding: 12px;
     background: #f7f8ff;
     border-radius: 8px;
     border: 1px solid #ddd;
 }
 
 .directions-dropdown h4 {
-    margin: 0 0 8px 0;
+    margin: 0 0 12px 0;
     color: #2f3e9e;
+    font-size: 1.3rem;           /* bigger header */
 }
 
 .direction-step {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    margin: 6px 0;
+    gap: 14px;                   /* more spacing */
+    margin: 10px 0;
+    font-size: 1.1rem;           /* bigger text for directions */
 }
 
 .direction-step .route-icon {
-    width: 20px;
-    height: 20px;
+    width: 28px;                 /* larger icons */
+    height: 28px;
     flex-shrink: 0;
 }
 
-
 .direction-step strong {
     color: #2f3e9e;
-    font-size: 0.9rem;
+    font-size: 1.1rem;           /* larger instruction text */
 }
 
 .cta-line-chip {
     display: inline-block;
     margin-top: 4px;
-    padding: 2px 6px;
-    border-radius: 5px;
-    font-size: 0.75rem;
+    padding: 4px 10px;           /* bigger chips */
+    border-radius: 6px;
+    font-size: 0.9rem;           /* bigger text */
     font-weight: 600;
 }
 
@@ -541,4 +544,174 @@ footer {
 
 .dropdown-actions span:hover {
     color: #000;
+}
+
+/* MOBILE RESPONSIVE LAYOUT */
+
+@media (max-width: 768px) {
+
+    /*GENERAL*/
+    body {
+        overflow-x: hidden;
+    }
+
+    header {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.75rem;
+    }
+
+    /*MAIN LAYOUT*/
+    main {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .info {
+        width: 100%;
+        margin-left: 0;
+        text-align: center;
+    }
+
+    .info h2 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .search-box {
+        width: 90%;
+        margin: 0 auto;
+    }
+
+    /*MAP*/
+    .map-container {
+        width: 100% !important;
+        height: 350px !important;
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+    }
+
+    /*SIDE PANEL*/
+    .side-panel {
+        width: 100% !important;
+        left: 0 !important;
+        transform: translateX(-100%);
+    }
+
+    .side-panel.active {
+        transform: translateX(0);
+    }
+
+    .panel-content {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .panel-content input,
+    .panel-content select,
+    .panel-content button {
+        width: 100%;
+        font-size: 1rem;
+    }
+
+    .routes-container {
+        max-height: 45vh;
+        overflow-y: auto;
+    }
+
+    .route-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .route-step img.route-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    /*FAVORITES / FOOTER*/
+    footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        padding-bottom: 2rem;
+    }
+
+    .custom-dropdown {
+        width: 90%;
+    }
+
+    .dropdown-menu {
+        width: 95%;
+    }
+
+    /*ROUTE DETAILS PANEL*/
+    #routeDetailsPanel {
+        width: 100% !important;
+        padding: 1.25rem;
+    }
+
+    #routeDetailsPanel h2 {
+        font-size: 1.5rem;
+    }
+
+    .step {
+        gap: 12px;
+        font-size: 1rem;
+        margin: 0.5rem 0;
+    }
+
+    .step-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .direction-step {
+        font-size: 1rem;
+        gap: 10px;
+    }
+
+    .direction-step .route-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .cta-line-chip {
+        padding: 3px 8px;
+        font-size: 0.8rem;
+    }
+
+
+    .panel-content {
+        padding: 0.5rem 1rem !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    .panel-content input,
+    .panel-content select,
+    .panel-content button {
+        width: 100% !important;
+        margin: 0.5rem 0 !important;
+        box-sizing: border-box;
+    }
+
+    .plan-btn {
+        width: 100% !important;
+    }
 }

@@ -20,7 +20,7 @@ const ctaStops = {
     // ... add all relevant CTA station names
 };
 
-// ---------- Utility: Determine Station Icon ----------
+/*/ ---------- Utility: Determine Station Icon ----------
 function getStationIcon(station) {
     // Use the type property directly
     if (!station || !station.type) return "bus.png";  // fallback
@@ -33,7 +33,7 @@ function getVehicleIcon(vehicle) {
     if (!vehicle || !vehicle.type) return "bus.png";  // fallback
     return vehicle.type === "train" ? "train.png" : "bus.png";
 }
-
+*/
 
 // ---------- Check if marker is in viewport ----------
 function isMarkerInView(marker) {
@@ -139,8 +139,12 @@ function displayTransitInfo(data, userLat, userLng) {
         const eta = calculateETA(stationData.location, userLat, userLng);
 
         const li = document.createElement("li");
-        li.innerHTML = `<img src="icons/${getStationIcon(stationData)}" style="width:16px;margin-right:6px;vertical-align:middle;">
+        /* li.innerHTML = `<img src="icons/${getStationIcon(stationData)}" style="width:16px;margin-right:6px;vertical-align:middle;">
                         <strong>${stationData.name}</strong> (${eta} min away)<br/>
+                        <small>${stationData.address}</small>`;
+        li.addEventListener("click", () => { map.panTo(stationData.location); map.setZoom(17); }); */
+
+        li.innerHTML = `<strong>${stationData.name}</strong> (${eta} min away)<br/>
                         <small>${stationData.address}</small>`;
         li.addEventListener("click", () => { map.panTo(stationData.location); map.setZoom(17); });
 
@@ -151,7 +155,7 @@ function displayTransitInfo(data, userLat, userLng) {
                 position: stationData.location,
                 map,
                 title: stationData.name,
-                icon: { url: `icons/${getStationIcon(stationData)}`, scaledSize: new google.maps.Size(25, 25) }
+                /* icon: { url: `icons/${getStationIcon(stationData)}`, scaledSize: new google.maps.Size(25, 25) } */
             });
 
             const infoWindow = new google.maps.InfoWindow({
@@ -175,8 +179,9 @@ function displayTransitInfo(data, userLat, userLng) {
             stationMarkers[id] = marker;
         } else {
             const marker = stationMarkers[id];
-            marker.setPosition(stationData.location);
+            /* marker.setPosition(stationData.location);
             marker.setIcon({ url: `icons/${getStationIcon(stationData)}`, scaledSize: new google.maps.Size(25, 25) });
+            marker.infoWindow.setContent(`<b>${stationData.name}</b><br>${stationData.address}<br>ETA: ${eta} min`); */
             marker.infoWindow.setContent(`<b>${stationData.name}</b><br>${stationData.address}<br>ETA: ${eta} min`);
         }
 
@@ -197,20 +202,31 @@ function createOrUpdateVehicleMarker(vehicle, userLat, userLng) {
 
     if (!transitListItems[id]) {
         const li = document.createElement("li");
-        li.innerHTML = `<img src="icons/${getVehicleIcon(vehicle)}" style="width:16px;margin-right:6px;vertical-align:middle;">
+        /* li.innerHTML = `<img src="icons/${getVehicleIcon(vehicle)}" style="width:16px;margin-right:6px;vertical-align:middle;">
                         <strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ''}</strong>
                         (${eta} min ETA)<br/>
-                        <small>Destination: ${vehicle.destination || 'En route'}</small>`;
+                        <small>Destination: ${vehicle.destination || 'En route'}</small>`; */
+        li.innerHTML = `<strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ""}</strong>
+                        (${eta} min ETA)<br/>
+                        <small>Destination: ${vehicle.destination || "En route"}</small>`;
+
         transitListItems[id] = { li, type: "vehicle", vehicle };
         document.getElementById("transit-list").appendChild(li);
-        li.addEventListener("click", () => map.panTo({ lat: vehicle.lat, lng: vehicle.lng }));
+        // li.addEventListener("click", () => map.panTo({ lat: vehicle.lat, lng: vehicle.lng }));
+        li.addEventListener("click", () => {
+            map.panTo({ lat: vehicle.lat, lng: vehicle.lng });
+            map.setZoom(16);
+        });
     } else {
         const item = transitListItems[id];
         item.vehicle = vehicle;
-        item.li.innerHTML = `<img src="icons/${getVehicleIcon(vehicle)}" style="width:16px;margin-right:6px;vertical-align:middle;">
+        /* item.li.innerHTML = `<img src="icons/${getVehicleIcon(vehicle)}" style="width:16px;margin-right:6px;vertical-align:middle;">
                              <strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ''}</strong>
                              (${eta} min ETA)<br/>
-                             <small>Destination: ${vehicle.destination || 'En route'}</small>`;
+                             <small>Destination: ${vehicle.destination || 'En route'}</small>`; */
+        item.li.innerHTML = `<strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ""}</strong>
+                            (${eta} min ETA)<br/>
+                            <small>Destination: ${vehicle.destination || "En route"}</small>`;
     }
 
     if (vehicleMarkers[id]) {
@@ -224,7 +240,7 @@ function createOrUpdateVehicleMarker(vehicle, userLat, userLng) {
         position: { lat: vehicle.lat, lng: vehicle.lng },
         map,
         title: `${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route} → ${vehicle.destination}`,
-        icon: { url: `icons/${getVehicleIcon(vehicle)}`, scaledSize: new google.maps.Size(25, 25) }
+        //icon: { url: `icons/${getVehicleIcon(vehicle)}`, scaledSize: new google.maps.Size(25, 25) }
     });
     marker.id = id;
     marker.vehicle = vehicle;
@@ -249,8 +265,8 @@ function createOrUpdateVehicleMarker(vehicle, userLat, userLng) {
 // ---------- Update InfoWindow ----------
 function updateInfoWindow(marker, vehicle, eta) {
     marker.infoWindow.setContent(
-        `<b>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ''}</b><br>
-         Destination: ${vehicle.destination || 'En route'}<br>
+        `<b>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ""}</b><br>
+         Destination: ${vehicle.destination || "En route"}<br>
          ETA: ${eta} min`
     );
 }
@@ -269,7 +285,10 @@ async function fetchCTAStopArrivals(stationName, liElement) {
 
         const nextArrivals = arrivals
             .slice(0, 3)
-            .map(a => `${a.rt} → ${a.dest} in ${a.arrT ? Math.max(Math.round((new Date(a.arrT) - new Date())/60000),0) : "?"} min`)
+            //.map(a => `${a.rt} → ${a.dest} in ${a.arrT ? Math.max(Math.round((new Date(a.arrT) - new Date())/60000),0) : "?"} min`)
+            .map(a => {
+                const minutes = a.arrT ? Math.max(Math.round((new Date(a.arrT) - new Date()) / 60000), 0) : "?";
+                return `${a.rt} → ${a.dest} in ${minutes} min`;})
             .join("<br>");
 
         liElement.innerHTML += `<br><small>Next arrivals:<br>${nextArrivals}</small>`;
@@ -302,11 +321,16 @@ function updateLiveETA(userLat, userLng) {
         const vehicle = marker.vehicle;
         const eta = calculateETA(vehicle, userLat, userLng);
         const item = transitListItems[id];
-        if (item && item.li) {
+        /* if (item && item.li) {
             item.li.innerHTML = `<img src="icons/${getVehicleIcon(vehicle)}" style="width:16px;margin-right:6px;vertical-align:middle;">
                                  <strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ""}</strong>
                                  (${eta} min ETA)<br>
                                  <small>Destination: ${vehicle.destination || "En route"}</small>`;
+        } */
+        if (item && item.li) {
+            item.li.innerHTML = `<strong>${vehicle.type === "bus" ? "Bus" : "Train"} ${vehicle.route || ""}</strong>
+                                (${eta} min ETA)<br>
+                                <small>Destination: ${vehicle.destination || "En route"}</small>`;
         }
         updateInfoWindow(marker, vehicle, eta);
     }
@@ -319,17 +343,19 @@ function updateLiveETA(userLat, userLng) {
 
         const stationData = item.data;
         const eta = calculateETA(stationData.location, userLat, userLng);
-        const icon = getStationIcon(stationData);
+        // const icon = getStationIcon(stationData);
 
         // Sidebar
         if (item.li) {
-            item.li.innerHTML = `<img src="icons/${icon}" style="width:16px;margin-right:6px;vertical-align:middle;">
+            /* item.li.innerHTML = `<img src="icons/${icon}" style="width:16px;margin-right:6px;vertical-align:middle;">
                                  <strong>${stationData.name}</strong> (${eta} min away)<br/>
-                                 <small>${stationData.address}</small>`;
+                                 <small>${stationData.address}</small>`; */
+            item.li.innerHTML = `<strong>${stationData.name}</strong> (${eta} min away)<br/>
+                                <small>${stationData.address}</small>`;
         }
 
         // Marker
-        marker.setIcon({ url: `icons/${icon}`, scaledSize: new google.maps.Size(25, 25) });
+        // marker.setIcon({ url: `icons/${icon}`, scaledSize: new google.maps.Size(25, 25) });
         marker.infoWindow.setContent(
             `<b>${stationData.name}</b><br>${stationData.address}<br>ETA: ${eta} min<br>
              <a href="index.html?destination=${encodeURIComponent(stationData.name)}">Route Here</a>`
@@ -353,8 +379,8 @@ function startAutoRefresh() {
                 const marker = stationMarkers[id];
                 if (isMarkerInView(marker)) {
                     const eta = calculateETA(item.data.location, pos.lat, pos.lng);
-                    item.li.innerHTML = `<img src="icons/${getStationIcon(item.data)}" style="width:16px;margin-right:6px;vertical-align:middle;">
-                                         <strong>${item.data.name}</strong> (${eta} min away)<br/>
+                    item.li.innerHTML = // <img src="icons/${getStationIcon(item.data)}" style="width:16px;margin-right:6px;vertical-align:middle;">
+                                         `<strong>${item.data.name}</strong> (${eta} min away)<br/>
                                          <small>${item.data.address}</small>`;
                     fetchCTAStopArrivals(item.data.name, item.li);
                 }

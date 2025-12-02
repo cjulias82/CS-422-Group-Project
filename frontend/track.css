@@ -1,124 +1,184 @@
-/* Basic Reset */
-* {
+/* Global Layout */
+body, html {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
+    height: 100%;
     font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f4;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
 }
 
-/* ---------- HEADER ---------- */
 header {
+    padding: 10px 20px;
+    background: #2f3e9e;
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    background-color: #2f3e9e;
-    color: #fff;
-    padding: 15px 25px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-header h1 {
-    font-size: 1.8rem;
-    letter-spacing: 1px;
-}
-
-/* Left side "LOOPED" link */
-header a {
-    text-decoration: none;
-    color: #fff;
-    font-weight: bold;
-    transition: color 0.3s ease, transform 0.2s ease;
-}
-
-header a:hover {
-    color: #00aaff;
-    transform: scale(1.05);
-}
-
-/* Responsive header for smaller screens */
-@media (max-width: 600px) {
-    header {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    header h1 {
-        margin-top: 10px;
-    }
-}
-
-/* ---------- MAIN LAYOUT ---------- */
 main {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
+    height: calc(100% - 60px);
 }
 
 #map {
-    width: 100%;
-    height: 400px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    flex: 1;
+    min-height: 0; /* for proper flexbox scrolling on mobile */
 }
 
-/* ---------- TRANSIT INFO ---------- */
+/* === Sidebar Panel === */
 #transit-info {
-    width: 85%;
-    max-width: 900px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    width: 330px;
+    background: #ffffffee;
+    backdrop-filter: blur(6px);
+    border-left: 1px solid #ccc;
+    padding: 18px;
+    box-shadow: -4px 0 14px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: #333;
-    border-bottom: 2px solid #00aaff;
-    padding-bottom: 5px;
+.panel-title {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #eee;
 }
 
-/* ---------- TRANSIT LIST ---------- */
-ul {
+#info-scroll {
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+/* Transit List */
+#transit-list {
     list-style: none;
+    margin: 0;
     padding: 0;
 }
 
-li {
-    padding: 10px 15px;
+#transit-list li {
+    display: flex;
+    align-items: center;
+    background: #fafafa;
+    padding: 10px 12px;
+    border-radius: 10px;
     margin-bottom: 10px;
-    background-color: #f9f9f9;
     border: 1px solid #ddd;
-    border-radius: 6px;
-    transition: background 0.2s ease, transform 0.1s ease;
+    cursor: pointer;
+    transition: 0.12s ease;
 }
 
-li:hover {
-    background-color: #eef7ff;
-    transform: scale(1.01);
+#transit-list li:hover {
+    background: #f0f0f0;
+    transform: translateY(-1px);
 }
 
-li strong {
-    font-size: 1.1rem;
+.transit-icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 10px;
+    opacity: 0.95;
+}
+
+.transit-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.transit-name {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.transit-type {
+    font-size: 12px;
+    color: #555;
+}
+
+.transit-eta {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2f3e9e;
+    white-space: nowrap;
+    padding-left: 8px;
+}
+
+/* Click Highlight */
+.selected-station {
+    border: 2px solid #2f3e9e !important;
+    box-shadow: 0 0 8px rgba(47, 62, 158, 0.15);
+}
+
+/* === Station Details Panel === */
+#station-details {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid #ddd;
+}
+
+#station-details h3 {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+#detail-content.hidden {
+    display: none;
+}
+
+#detail-content p {
+    margin: 6px 0;
+    color: #333;
+    font-size: 14px;
+}
+
+#detail-arrivals {
+    margin: 6px 0 12px 0;
+    padding-left: 18px;
     color: #222;
 }
 
-/* ---------- LINKS ---------- */
-a {
-    text-decoration: none;
-    color: #333;
+.btn {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #cfcfcf;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
 }
 
-a:hover {
-    color: #00aaff;
+.btn:hover { transform: translateY(-1px); }
+
+.btn.primary {
+    background: #2f3e9e;
+    color: #fff;
+    border: none;
+}
+
+.btn.primary:hover {
+    background: #1e2a6a;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+    #transit-info {
+        width: 100%;
+        height: 320px;
+        border-left: none;
+        border-top: 1px solid #ccc;
+    }
+    main {
+        flex-direction: column;
+    }
+    #map {
+        height: calc(100% - 320px - 60px);
+    }
 }

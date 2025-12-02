@@ -20,16 +20,20 @@ const ctaStops = {
     // ... add all relevant CTA station names
 };
 
+// ---------- Utility: Determine Station Icon ----------
+function getStationIcon(station) {
+    // Use the type property directly
+    if (!station || !station.type) return "bus.png";  // fallback
+    return station.type === "train" ? "train.png" : "bus.png";
+}
+
 // ---------- Utility: Determine Vehicle Icon ----------
 function getVehicleIcon(vehicle) {
+    // Use the type property directly
+    if (!vehicle || !vehicle.type) return "bus.png";  // fallback
     return vehicle.type === "train" ? "train.png" : "bus.png";
 }
 
-// ---------- Utility: Determine Station Icon ----------
-function getStationIcon(station) {
-    if (!station) return "bus.png";
-    return station.type === "train" ? "train.png" : "bus.png";
-}
 
 // ---------- Check if marker is in viewport ----------
 function isMarkerInView(marker) {
